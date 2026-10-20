@@ -86,6 +86,20 @@ Rules of thumb / 经验值
 - **Icons / line art**: skip this tool, use centreline tracing instead
 - **Big flat fills, small file**: `--colors 16~24 --eps 0.8 --min-area 60 --smooth 1`
 
+## Where it fits in an LLM image pipeline / 在 LLM 生图流程里的位置
+
+Image models hand you a raster: a 1024² PNG that pixelates the moment you scale it, and that you cannot recolour or re-edit as shapes. This tracer is the stage **after** generation — feed the model's output in, get a self-contained SVG out in about five seconds on CPU, with no GPU, no network and no model weights.
+
+生图模型交出来的是位图：一放大就糊，也不能按形状改色。这个工具就是生成之后的那一步——把模型的输出喂进去，五秒在 CPU 上拿到一个自包含的 SVG，不占 GPU、不联网、也不需要模型权重。
+
+Two concrete uses: **batch post-processing** (run a whole generation batch through it, keep the vector version for print, icons and UI assets) and **reproducible assets** (an SVG diffs cleanly in git and renders identically everywhere; a sampled PNG does neither).
+
+两个具体用法：批量后处理，一批图出完统一转矢量，拿去做印刷、图标、UI 素材；以及可复现的素材管理，SVG 在 git 里能 diff、在哪儿渲染都一样，采样出来的 PNG 两样都做不到。
+
+Caveat: it vectorises whatever the model produced, it does not fix it — and 40–48 colours flattens gradients, see the limits below.
+
+一句提醒：它只把生成结果矢量化，不会修正模型画错的东西；40~48 色也会把渐变压平，限制见下一节。
+
 ## Verify it looks right / 验证闭环
 
 Tracing without checking is guessing. `scripts/render_check.py` renders the SVG through headless Chrome and reports the pixel difference against the source, plus an optional side-by-side image.
