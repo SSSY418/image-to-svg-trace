@@ -81,13 +81,13 @@ Rules of thumb:
 - **Icons / line art**: skip this tool, use centreline tracing instead
 - **Big flat fills, small file**: `--colors 16~24 --eps 0.8 --min-area 60 --smooth 1`
 
-## Where it fits in an LLM image pipeline
+## Why chat models can use it too
 
-Image models hand you a raster: a 1024² PNG that pixelates the moment you scale it, and that you cannot recolour or re-edit as shapes. This tracer is the stage **after** generation — feed the model's output in, get a self-contained SVG out in about five seconds on CPU, with no GPU, no network and no model weights.
+A chat model (DeepSeek and friends) cannot produce images on its own. But SVG is plain text, and text is exactly what a chat model can read and rewrite — which turns drawing into another form of writing code.
 
-Two concrete uses: **batch post-processing** (run a whole generation batch through it, keep the vector version for print, icons and UI assets) and **reproducible assets** (an SVG diffs cleanly in git and renders identically everywhere; a sampled PNG does neither).
+With this tracer, a text-only model gets a full loop: read a bitmap → emit an SVG → render it back through `render_check.py` and score the MAE → adjust parameters and go again. The artifact is something it can inspect and repair itself, with no image generation and no GPU.
 
-Caveat: it vectorises whatever the model produced, it does not fix it — and 40–48 colours flattens gradients, see the limits below.
+One honest caveat: asking it to hand-place coordinates from scratch does not work — measured at MAE 76.8, an unreadable mess. The workable path is *trace when you have a source image, write a small script when you don't*, never blind point-placing. The tool's job here is to turn its text output into pixels, and the pixel difference back into a number it can reason about.
 
 ## Verify it looks right
 
